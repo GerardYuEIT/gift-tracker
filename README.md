@@ -1,32 +1,31 @@
-# React + TypeScript + Vite
+# Gift Tracker
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+A small app for keeping track of who you're getting gifts for, what occasion, and your gift ideas/status (planned, bought, given).
 
-Currently, two official plugins are available:
+**Live demo:** https://gift-tracker-eg.netlify.app/
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Features
 
-## React Compiler
+- Add, edit, and delete people with an occasion (birthday, Christmas, wedding, etc.) and notes
+- Add, edit, and delete gift ideas per person, with price, link, and status
+- Search and filter people by name/occasion
+- Light/dark theme
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Tech stack
 
-## Expanding the Oxlint configuration
+- **Frontend:** React, TypeScript, Vite, Tailwind CSS
+- **Backend:** Spring Boot, deployed on Railway
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+## Team
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+- Frontend: Gerard
+- Backend: Ethan
+
+## Running locally
+
+```bash
+npm install
+npm run dev
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+The app talks to the live backend at `https://gift-tracker-api-production.up.railway.app` (configured in `src/api/client.ts`) — no local backend setup needed.
