@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { OCCASIONS, type NewPerson, type Occasion, type Person } from '../types'
 import { occasionLabel } from '../ui'
+import { Select } from './Select'
 
 interface PersonFormProps {
   initial?: Person
@@ -45,17 +46,12 @@ export function PersonForm({ initial, onSubmit, onCancel }: PersonFormProps) {
 
       <label className="flex flex-col gap-1">
         <span className={labelClass}>Occasion</span>
-        <select
+        <Select
           value={occasion}
-          onChange={(e) => setOccasion(e.target.value as Occasion)}
-          className={inputClass}
-        >
-          {OCCASIONS.map((o) => (
-            <option key={o} value={o}>
-              {occasionLabel(o)}
-            </option>
-          ))}
-        </select>
+          onChange={(val) => setOccasion(val as Occasion)}
+          options={OCCASIONS.map((o) => ({ value: o, label: occasionLabel(o) }))}
+          size="lg"
+        />
       </label>
 
       <label className="flex flex-col gap-1">
