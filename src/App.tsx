@@ -16,16 +16,18 @@ import { Modal } from './components/Modal'
 import { PersonForm } from './components/PersonForm'
 import { Toast } from './components/Toast'
 import {
+  GIFT_PRIORITIES,
   GIFT_STATUSES,
   OCCASIONS,
   type Gift,
+  type GiftPriority,
   type GiftStatus,
   type NewGift,
   type NewPerson,
   type Occasion,
   type Person,
 } from './types'
-import { occasionLabel, statusLabel, StatusBadge, ThemeToggle } from './ui'
+import { occasionLabel, PriorityBadge, priorityLabel, relationshipLabel, statusLabel, StatusBadge, ThemeToggle } from './ui'
 import { useTheme } from './useTheme'
 import { loadGiftEmojis, setGiftEmoji } from './emojiStore'
 import { loadGiftColors, setGiftColor } from './colorStore'
@@ -85,6 +87,7 @@ function App() {
   const [giftStatusFilter, setGiftStatusFilter] = useState<GiftStatus | 'ALL'>('ALL')
   const [giftMinPrice, setGiftMinPrice] = useState('')
   const [giftMaxPrice, setGiftMaxPrice] = useState('')
+  const [giftPriorityFilter, setGiftPriorityFilter] = useState<GiftPriority | 'ALL'>('ALL')
   const [personAvatars, setPersonAvatars] = useState<Record<string, { emoji: string | null; color: string | null }>>(() => loadPersonAvatars())
   const [customizingPerson, setCustomizingPerson] = useState(false)
   const [currency, setCurrency] = useState<CurrencyCode>(() => loadCurrency())
@@ -105,6 +108,7 @@ function App() {
     setGiftStatusFilter('ALL')
     setGiftMinPrice('')
     setGiftMaxPrice('')
+    setGiftPriorityFilter('ALL')
     setCustomizingPerson(false)
   }, [selectedId])
 
@@ -118,6 +122,7 @@ function App() {
     return gifts.filter((g) => {
       if (giftSearch && !g.idea.toLowerCase().includes(giftSearch.trim().toLowerCase())) return false
       if (giftStatusFilter !== 'ALL' && g.status !== giftStatusFilter) return false
+      if (giftPriorityFilter !== 'ALL' && g.priority !== giftPriorityFilter) return false
       const min = giftMinPrice === '' ? null : Number(giftMinPrice)
       const max = giftMaxPrice === '' ? null : Number(giftMaxPrice)
       if (min !== null && (g.price == null || g.price < min)) return false
@@ -196,10 +201,15 @@ function App() {
       const updated = await updatePerson(String(selected.id), {
         name: selected.name,
         occasion: selected.occasion,
+        relationship: selected.relationship,
+        eventDate: selected.eventDate,
         notes: notesValue.trim() || null,
       })
       setPeople((prev) => prev.map((p) => (p.id === selected.id ? updated : p)))
       setEditingNotes(false)
+      setToast('Description saved')
+    } catch {
+      setToast('Failed to save — please try again')
     } finally {
       setSavingNotes(false)
     }
@@ -273,6 +283,12 @@ function App() {
           options={[{ value: 'ALL', label: 'All statuses' }, ...GIFT_STATUSES.map((s) => ({ value: s, label: statusLabel(s) }))]}
           size="md"
         />
+        <Select
+          value={giftPriorityFilter}
+          onChange={(val) => setGiftPriorityFilter(val as GiftPriority | 'ALL')}
+          options={[{ value: 'ALL', label: 'All priorities' }, ...GIFT_PRIORITIES.map((p) => ({ value: p, label: priorityLabel(p) }))]}
+          size="md"
+        />
         <div className="flex items-center gap-1">
           <span className="text-xs text-zinc-400">$</span>
           <input
@@ -309,19 +325,19 @@ function App() {
           onClick={() => setDialog({ kind: 'viewGift', personId, gift: g })}
           className="flex w-full items-center gap-3 px-4 py-3.5 text-left"
         >
-          <EmojiPicker
-            value={giftEmojis[String(g.id)] ?? null}
-            onChange={(emoji) => handleSetGiftEmoji(String(g.id), emoji)}
-          />
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-zinc-100 text-base dark:bg-zinc-800">
+            {giftEmojis[String(g.id)] ?? '🎁'}
+          </span>
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
               <span className="font-medium text-zinc-900 dark:text-zinc-100">{g.idea}</span>
               <StatusBadge status={g.status} />
               {personName && <span className="text-xs text-zinc-400">· {personName}</span>}
             </div>
-            {(g.price != null || g.link) && (
-              <div className="mt-0.5 flex gap-3 text-xs text-zinc-400">
+            {(g.price != null || g.priority || g.link) && (
+              <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-zinc-400">
                 {g.price != null && <span>{formatPrice(g.price, currency)}</span>}
+                {g.priority && <PriorityBadge priority={g.priority} />}
                 {g.link && <span className="text-indigo-400">Has link</span>}
               </div>
             )}
@@ -601,7 +617,13 @@ function App() {
                   </button>
                   <div>
                     <h2 className="text-xl font-bold sm:text-2xl">{selected.name}</h2>
-                    <p className="text-sm text-zinc-500 dark:text-zinc-400">{occasionLabel(selected.occasion)}</p>
+                    <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                      {[
+                        selected.relationship ? relationshipLabel(selected.relationship) : null,
+                        occasionLabel(selected.occasion),
+                        selected.eventDate ? new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' }).format(new Date(selected.eventDate)) : null,
+                      ].filter(Boolean).join(' · ')}
+                    </p>
                   </div>
                 </div>
                 <div className="flex shrink-0 gap-2">
@@ -792,11 +814,26 @@ function App() {
               />
             </div>
             <div className="flex flex-col gap-2 rounded-xl border border-zinc-100 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-800/50">
+              {([
+                ['Price', dialog.gift.price != null ? formatPrice(dialog.gift.price, currency) : null],
+                ['Budget', dialog.gift.budget != null ? formatPrice(dialog.gift.budget, currency) : null],
+                ['Quantity', dialog.gift.quantity != null ? String(dialog.gift.quantity) : null],
+              ] as [string, string | null][]).map(([label, val]) => val != null && (
+                <div key={label}>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-medium uppercase tracking-wide text-zinc-400">{label}</span>
+                    <span className="font-semibold text-zinc-900 dark:text-zinc-100">{val}</span>
+                  </div>
+                  <div className="mt-2 h-px bg-zinc-200 dark:bg-zinc-700" />
+                </div>
+              ))}
               <div className="flex items-center justify-between">
-                <span className="text-xs font-medium uppercase tracking-wide text-zinc-400">Price</span>
-                <span className="font-semibold text-zinc-900 dark:text-zinc-100">
-                  {dialog.gift.price != null ? formatPrice(dialog.gift.price, currency) : '—'}
-                </span>
+                <span className="text-xs font-medium uppercase tracking-wide text-zinc-400">Priority</span>
+                {dialog.gift.priority ? (
+                  <PriorityBadge priority={dialog.gift.priority} />
+                ) : (
+                  <span className="text-sm text-zinc-400">—</span>
+                )}
               </div>
               <div className="h-px bg-zinc-200 dark:bg-zinc-700" />
               <div className="flex items-center justify-between">
@@ -814,6 +851,15 @@ function App() {
                   <span className="text-sm text-zinc-400">—</span>
                 )}
               </div>
+              {dialog.gift.notes && (
+                <>
+                  <div className="h-px bg-zinc-200 dark:bg-zinc-700" />
+                  <div className="flex flex-col gap-1">
+                    <span className="text-xs font-medium uppercase tracking-wide text-zinc-400">Notes</span>
+                    <p className="text-sm text-zinc-600 dark:text-zinc-300">{dialog.gift.notes}</p>
+                  </div>
+                </>
+              )}
             </div>
             <div className="flex gap-2 pt-1">
               <button

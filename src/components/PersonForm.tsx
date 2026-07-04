@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { OCCASIONS, type NewPerson, type Occasion, type Person } from '../types'
-import { occasionLabel } from '../ui'
+import { OCCASIONS, RELATIONSHIPS, type NewPerson, type Occasion, type Person, type Relationship } from '../types'
+import { occasionLabel, relationshipLabel } from '../ui'
 import { Select } from './Select'
 
 interface PersonFormProps {
@@ -17,6 +17,8 @@ const labelClass = 'text-sm text-zinc-600 dark:text-zinc-400'
 export function PersonForm({ initial, onSubmit, onCancel }: PersonFormProps) {
   const [name, setName] = useState(initial?.name ?? '')
   const [occasion, setOccasion] = useState<Occasion>(initial?.occasion ?? 'BIRTHDAY')
+  const [relationship, setRelationship] = useState<Relationship | ''>(initial?.relationship ?? '')
+  const [eventDate, setEventDate] = useState(initial?.eventDate ?? '')
   const [notes, setNotes] = useState(initial?.notes ?? '')
   const [submitting, setSubmitting] = useState(false)
 
@@ -25,7 +27,13 @@ export function PersonForm({ initial, onSubmit, onCancel }: PersonFormProps) {
     if (!name.trim() || submitting) return
     setSubmitting(true)
     try {
-      await onSubmit({ name: name.trim(), occasion, notes: notes.trim() || null })
+      await onSubmit({
+        name: name.trim(),
+        occasion,
+        relationship: relationship || null,
+        eventDate: eventDate || null,
+        notes: notes.trim() || null,
+      })
     } finally {
       setSubmitting(false)
     }
@@ -53,6 +61,28 @@ export function PersonForm({ initial, onSubmit, onCancel }: PersonFormProps) {
           size="lg"
         />
       </label>
+
+      <div className="flex flex-col gap-4 sm:flex-row">
+        <label className="flex flex-1 flex-col gap-1">
+          <span className={labelClass}>Relationship</span>
+          <Select
+            value={relationship}
+            onChange={(val) => setRelationship(val as Relationship | '')}
+            options={[{ value: '', label: 'None' }, ...RELATIONSHIPS.map((r) => ({ value: r, label: relationshipLabel(r) }))]}
+            size="lg"
+          />
+        </label>
+
+        <label className="flex flex-1 flex-col gap-1">
+          <span className={labelClass}>Event date</span>
+          <input
+            type="date"
+            value={eventDate}
+            onChange={(e) => setEventDate(e.target.value)}
+            className={inputClass}
+          />
+        </label>
+      </div>
 
       <label className="flex flex-col gap-1">
         <span className={labelClass}>Notes</span>

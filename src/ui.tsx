@@ -1,4 +1,4 @@
-import type { GiftStatus, Occasion } from './types'
+import type { GiftStatus, Occasion, Relationship } from './types'
 
 const OCCASION_LABELS: Record<Occasion, string> = {
   BIRTHDAY: 'Birthday',
@@ -36,6 +36,48 @@ export function StatusBadge({ status }: { status: GiftStatus }) {
       className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${STATUS_STYLES[status]}`}
     >
       {statusLabel(status)}
+    </span>
+  )
+}
+
+const RELATIONSHIP_LABELS: Record<Relationship, string> = {
+  FRIEND: 'Friend',
+  FAMILY: 'Family',
+  SPOUSE: 'Spouse',
+  PARTNER: 'Partner',
+  RELATIVE: 'Relative',
+  COWORKER: 'Coworker',
+  CLASSMATE: 'Classmate',
+  TEACHER: 'Teacher',
+  OTHER: 'Other',
+}
+
+export function relationshipLabel(r: Relationship): string {
+  return RELATIONSHIP_LABELS[r]
+}
+
+const PRIORITY_LABELS: Record<GiftPriority, string> = {
+  LOW: 'Low',
+  MEDIUM: 'Medium',
+  HIGH: 'High',
+}
+
+export function priorityLabel(priority: GiftPriority): string {
+  return PRIORITY_LABELS[priority]
+}
+
+const PRIORITY_STYLES: Record<GiftPriority, string> = {
+  HIGH: 'bg-red-50 text-red-600 border-red-200 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/30',
+  MEDIUM: 'bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/30',
+  LOW: 'bg-zinc-100 text-zinc-500 border-zinc-200 dark:bg-zinc-700/40 dark:text-zinc-400 dark:border-zinc-600',
+}
+
+export function PriorityBadge({ priority }: { priority: GiftPriority }) {
+  return (
+    <span
+      className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${PRIORITY_STYLES[priority]}`}
+    >
+      {priorityLabel(priority)}
     </span>
   )
 }
