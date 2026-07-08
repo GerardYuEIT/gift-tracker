@@ -1,4 +1,4 @@
-import type { Gift, NewGift, NewPerson, Person } from '../types'
+import type { Gift, GiftImage, NewGift, NewPerson, Person } from '../types'
 
 export const BASE_URL = 'https://gift-tracker-api-production.up.railway.app/api'
 
@@ -66,5 +66,17 @@ export async function updateGift(_personId: string, giftId: string, data: NewGif
 
 export async function deleteGift(_personId: string, giftId: string): Promise<void> {
   const res = await fetch(`${BASE_URL}/gifts/${giftId}`, { method: 'DELETE' })
+  return handle<void>(res)
+}
+
+export async function uploadGiftImage(giftId: string, file: File): Promise<GiftImage> {
+  const form = new FormData()
+  form.append('file', file)
+  const res = await fetch(`${BASE_URL}/gifts/${giftId}/images`, { method: 'POST', body: form })
+  return handle<GiftImage>(res)
+}
+
+export async function deleteGiftImage(imageId: number): Promise<void> {
+  const res = await fetch(`${BASE_URL}/gift-images/${imageId}`, { method: 'DELETE' })
   return handle<void>(res)
 }

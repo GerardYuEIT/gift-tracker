@@ -23,6 +23,15 @@ export const GIFT_STATUSES: GiftStatus[] = ['PLANNED', 'BOUGHT', 'GIVEN']
 export type GiftPriority = 'LOW' | 'MEDIUM' | 'HIGH'
 export const GIFT_PRIORITIES: GiftPriority[] = ['LOW', 'MEDIUM', 'HIGH']
 
+export interface GiftImage {
+  id: number
+  objectName: string
+  originalFileName: string
+  contentType: string
+  size: number
+  uploadedAt: string
+}
+
 export interface Gift {
   id: string
   idea: string
@@ -34,6 +43,7 @@ export interface Gift {
   link: string | null
   imageUrl: string | null
   status: GiftStatus
+  images?: GiftImage[]
 }
 
 export type Relationship =
